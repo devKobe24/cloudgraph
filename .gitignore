@@ -1,0 +1,78 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Packaging / build
+build/
+dist/
+*.egg
+*.egg-info/
+.eggs/
+sdist/
+wheels/
+share/python-wheels/
+MANIFEST
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ---- uv ----
+# uv.lock 은 커밋합니다 (의존성 고정). 캐시만 무시.
+.uv/
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.tox/
+.nox/
+.cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# ---- Type checkers / linters ----
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+# ---- awsgraph 출력물 ----
+awsgraph-out/
+*.svg.tmp
+
+# ---- IDE / 에디터 ----
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- OS ----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ---- 로컬 환경변수 / 비밀 ----
+.env
+.env.*
+!.env.example
+*.pem
+
+# ---- 로컬 전용 문서 ----
+.research/
+design-docs/
