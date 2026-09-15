@@ -1,0 +1,18 @@
+{
+  "catalog_id": "ap-northeast-2-2026-09",
+  "region": "ap-northeast-2",
+  "currency": "USD",
+  "source": "maintainer-entered AWS on-demand list prices",
+  "notes": "Rates are hand-entered and approximate. Regenerate with tools/update_pricing.py before release; see docs/PRICING.md.",
+  "rates": {
+    "ec2/linux/shared/on-demand/t3.micro": "0.0130",
+    "ec2/linux/shared/on-demand/t3.small": "0.0260",
+    "ec2/linux/shared/on-demand/t3.medium": "0.0520",
+    "ec2/linux/shared/on-demand/t3.large": "0.1040",
+    "ec2/linux/shared/on-demand/t3.xlarge": "0.2080",
+    "ec2/linux/shared/on-demand/m5.large": "0.1180",
+    "ec2/linux/shared/on-demand/m5.xlarge": "0.2360",
+    "ec2/linux/shared/on-demand/c5.large": "0.0960",
+    "ec2/linux/shared/on-demand/r5.large": "0.1600"
+  }
+}

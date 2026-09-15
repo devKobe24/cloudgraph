@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=83"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "awsgraph"
+version = "0.1.0"
+description = "Local-first AWS architecture graph and cost estimator"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+dependencies = [
+  "networkx>=3.4,<4",
+  "pydantic>=2,<3",
+  "rapidfuzz>=3,<4",
+]
+
+[project.scripts]
+awsgraph = "awsgraph.__main__:main"
+
+[tool.setuptools]
+packages = ["awsgraph"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+awsgraph = ["assets/*", "data/pricing/*.json"]
+
+[dependency-groups]
+dev = ["pytest>=9"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

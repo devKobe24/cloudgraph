@@ -1,0 +1,9 @@
+{
+  "catalog_id": "test-catalog",
+  "region": "ap-northeast-2",
+  "currency": "USD",
+  "rates": {
+    "ec2/linux/shared/on-demand/t3.medium": "0.0520",
+    "ec2/linux/shared/on-demand/t3.small": "0.0260"
+  }
+}
