@@ -1,0 +1,402 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "schema_version": "0.1",
+    "product_version": "0.1.0",
+    "architecture_name": "Three Tier",
+    "region": "ap-northeast-2",
+    "currency": "USD",
+    "catalog_id": "ap-northeast-2-2026-09",
+    "estimate": {
+      "status": "priced",
+      "monthly_cost": "287.54",
+      "currency": "USD",
+      "catalog_id": "ap-northeast-2-2026-09",
+      "unpriced_resource_ids": []
+    }
+  },
+  "nodes": [
+    {
+      "label": "Main VPC",
+      "resource_type": "vpc",
+      "service": "VPC",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.0.0/16"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "vpc"
+    },
+    {
+      "label": "Public Subnet",
+      "resource_type": "subnet",
+      "service": "Subnet",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.1.0/24",
+        "availability_zone": "ap-northeast-2a"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "pub"
+    },
+    {
+      "label": "App Subnet",
+      "resource_type": "subnet",
+      "service": "Subnet",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.2.0/24",
+        "availability_zone": "ap-northeast-2a"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "app"
+    },
+    {
+      "label": "DB Subnet",
+      "resource_type": "subnet",
+      "service": "Subnet",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.3.0/24",
+        "availability_zone": "ap-northeast-2c"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "db"
+    },
+    {
+      "label": "Public ALB",
+      "resource_type": "alb",
+      "service": "ALB",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "scheme": "internet-facing"
+      },
+      "usage": {
+        "load_balancer_count": 1,
+        "hours_per_month": 730.0,
+        "lcu_hours_per_month": 750.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "22.43",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "load balancer hours",
+          "amount": "16.43",
+          "unit": "USD"
+        },
+        {
+          "name": "LCU hours",
+          "amount": "6.00",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "1 x internet-facing ALB at 730 h/month",
+        "750 LCU-hours/month entered by hand, not measured"
+      ],
+      "cost_missing": [],
+      "id": "alb"
+    },
+    {
+      "label": "Backend EC2",
+      "resource_type": "ec2",
+      "service": "EC2",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "instance_type": "t3.medium",
+        "operating_system": "linux",
+        "tenancy": "shared",
+        "purchase_option": "on-demand"
+      },
+      "usage": {
+        "instance_count": 2,
+        "hours_per_month": 730.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "75.92",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "instance hours",
+          "amount": "75.92",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "2 x t3.medium at 730 h/month",
+        "on-demand linux, shared tenancy"
+      ],
+      "cost_missing": [],
+      "id": "ec2"
+    },
+    {
+      "label": "Data Volume",
+      "resource_type": "ebs",
+      "service": "EBS",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "volume_type": "gp3",
+        "size_gib": 200
+      },
+      "usage": {
+        "volume_count": 2,
+        "month_fraction": 1.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "36.48",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "provisioned storage",
+          "amount": "36.48",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "2 x 200 GiB gp3",
+        "baseline gp3 performance only: provisioned IOPS and throughput are not priced"
+      ],
+      "cost_missing": [],
+      "id": "vol"
+    },
+    {
+      "label": "Main RDS",
+      "resource_type": "rds",
+      "service": "RDS",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "engine": "postgres",
+        "instance_class": "db.t3.medium",
+        "multi_az": false,
+        "storage_type": "gp3",
+        "storage_gib": 100
+      },
+      "usage": {
+        "instance_count": 1,
+        "hours_per_month": 730.0,
+        "storage_month_fraction": 1.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "91.94",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "instance hours",
+          "amount": "78.84",
+          "unit": "USD"
+        },
+        {
+          "name": "storage",
+          "amount": "13.10",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "1 x db.t3.medium postgres, Single-AZ, at 730 h/month",
+        "100 GiB gp3 storage per instance"
+      ],
+      "cost_missing": [],
+      "id": "rds"
+    },
+    {
+      "label": "Public NAT",
+      "resource_type": "nat-gateway",
+      "service": "NAT Gateway",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "connectivity_type": "public"
+      },
+      "usage": {
+        "gateway_count": 1,
+        "hours_per_month": 730.0,
+        "processed_gb_per_month": 300.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "60.77",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "gateway hours",
+          "amount": "43.07",
+          "unit": "USD"
+        },
+        {
+          "name": "data processing",
+          "amount": "17.70",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "1 x public NAT gateway at 730 h/month",
+        "300 GB processed/month entered by hand, not measured"
+      ],
+      "cost_missing": [],
+      "id": "nat"
+    }
+  ],
+  "edges": [
+    {
+      "id": "r1",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "vpc",
+      "target": "pub",
+      "key": "r1"
+    },
+    {
+      "id": "r2",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "vpc",
+      "target": "app",
+      "key": "r2"
+    },
+    {
+      "id": "r3",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "vpc",
+      "target": "db",
+      "key": "r3"
+    },
+    {
+      "id": "r4",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "pub",
+      "target": "alb",
+      "key": "r4"
+    },
+    {
+      "id": "r5",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "pub",
+      "target": "nat",
+      "key": "r5"
+    },
+    {
+      "id": "r6",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "app",
+      "target": "ec2",
+      "key": "r6"
+    },
+    {
+      "id": "r8",
+      "relation": "routes-to",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "app",
+      "target": "nat",
+      "key": "r8"
+    },
+    {
+      "id": "r7",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "db",
+      "target": "rds",
+      "key": "r7"
+    },
+    {
+      "id": "r9",
+      "relation": "connects-to",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "alb",
+      "target": "ec2",
+      "key": "r9"
+    },
+    {
+      "id": "r10",
+      "relation": "connects-to",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "ec2",
+      "target": "rds",
+      "key": "r10"
+    },
+    {
+      "id": "r11",
+      "relation": "attached-to",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "ec2",
+      "target": "vol",
+      "key": "r11"
+    }
+  ],
+  "awsgraph_schema_version": "0.1"
+}

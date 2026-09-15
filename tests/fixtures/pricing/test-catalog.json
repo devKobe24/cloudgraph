@@ -4,6 +4,13 @@
   "currency": "USD",
   "rates": {
     "ec2/linux/shared/on-demand/t3.medium": "0.0520",
-    "ec2/linux/shared/on-demand/t3.small": "0.0260"
+    "ec2/linux/shared/on-demand/t3.small": "0.0260",
+    "ebs/gp3/gb-month": "0.1000",
+    "rds/mysql/single-az/on-demand/db.t3.medium": "0.2000",
+    "rds/storage/gp3/gb-month": "0.1000",
+    "alb/load-balancer-hour": "0.0200",
+    "alb/lcu-hour": "0.0100",
+    "nat-gateway/gateway-hour": "0.0400",
+    "nat-gateway/processed-gb": "0.0500"
   }
 }

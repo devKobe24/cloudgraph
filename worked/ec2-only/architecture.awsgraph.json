@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.1",
+  "metadata": {
+    "name": "EC2 Only"
+  },
+  "pricing_context": {
+    "region": "ap-northeast-2",
+    "currency": "USD",
+    "catalog_id": "ap-northeast-2-2026-09"
+  },
+  "resources": [
+    {
+      "id": "res_vpc",
+      "name": "Main VPC",
+      "resource_type": "vpc",
+      "configuration": {
+        "cidr_block": "10.0.0.0/16"
+      }
+    },
+    {
+      "id": "res_subnet",
+      "name": "App Subnet",
+      "resource_type": "subnet",
+      "configuration": {
+        "cidr_block": "10.0.1.0/24",
+        "availability_zone": "ap-northeast-2a"
+      }
+    },
+    {
+      "id": "res_ec2",
+      "name": "Backend EC2",
+      "resource_type": "ec2",
+      "configuration": {
+        "instance_type": "t3.medium"
+      },
+      "usage": {
+        "instance_count": 2,
+        "hours_per_month": 730
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "edge_vpc_subnet",
+      "source": "res_vpc",
+      "target": "res_subnet",
+      "relation": "contains"
+    },
+    {
+      "id": "edge_subnet_ec2",
+      "source": "res_subnet",
+      "target": "res_ec2",
+      "relation": "contains"
+    }
+  ],
+  "layout": {
+    "positions": {
+      "res_vpc": { "x": 0, "y": 0 },
+      "res_subnet": { "x": 0, "y": 120 },
+      "res_ec2": { "x": 0, "y": 240 }
+    }
+  }
+}

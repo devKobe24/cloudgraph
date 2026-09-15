@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -10,9 +11,7 @@ from awsgraph.schema import DEFAULT_CATALOG_ID
 
 
 def run(*args):
-    return subprocess.run(
-        [sys.executable, "-m", "awsgraph", *args], capture_output=True, text=True
-    )
+    return subprocess.run([sys.executable, "-m", "awsgraph", *args], capture_output=True, text=True)
 
 
 def test_help_lists_every_subcommand():
@@ -32,8 +31,12 @@ def test_no_args_prints_help():
     assert main([]) == 0
 
 
-def test_unimplemented_command_exits_nonzero():
-    assert main(["export"]) == 2
+def test_every_advertised_command_is_implemented():
+    # Until Phase 7 this guarded the stub path. Every subcommand in --help now
+    # has a handler, so the useful assertion is that none is left advertised-only.
+    from awsgraph.cli import COMMANDS
+
+    assert set(SUBCOMMANDS) == set(COMMANDS)
 
 
 def test_unknown_command_exits_nonzero():
@@ -106,9 +109,13 @@ def test_build_rejects_an_invalid_design(tmp_path, capsys):
             {
                 "metadata": {"name": "T"},
                 "resources": [
-                    {"id": "a", "name": "A", "resource_type": "ec2",
-                     "configuration": {"instance_type": "t3.medium"},
-                     "usage": {"instance_count": 1, "hours_per_month": 730}},
+                    {
+                        "id": "a",
+                        "name": "A",
+                        "resource_type": "ec2",
+                        "configuration": {"instance_type": "t3.medium"},
+                        "usage": {"instance_count": 1, "hours_per_month": 730},
+                    },
                     {"id": "b", "name": "B", "resource_type": "vpc"},
                 ],
                 "relationships": [
@@ -130,9 +137,13 @@ def test_build_warns_about_unpriced_resources(tmp_path, capsys):
             {
                 "metadata": {"name": "T"},
                 "resources": [
-                    {"id": "a", "name": "Backend", "resource_type": "ec2",
-                     "configuration": {"instance_type": "t4g.nano"},
-                     "usage": {"instance_count": 1, "hours_per_month": 730}}
+                    {
+                        "id": "a",
+                        "name": "Backend",
+                        "resource_type": "ec2",
+                        "configuration": {"instance_type": "t4g.nano"},
+                        "usage": {"instance_count": 1, "hours_per_month": 730},
+                    }
                 ],
             }
         ),
@@ -201,6 +212,13 @@ def test_build_makes_no_network_calls(tmp_path, monkeypatch):
 def built(tmp_path):
     out = tmp_path / "out"
     main(["build", "tests/fixtures/ec2.awsgraph.json", "--out", str(out)])
+    return out
+
+
+@pytest.fixture
+def built_three_tier(tmp_path):
+    out = tmp_path / "out"
+    main(["build", "tests/fixtures/three-tier.awsgraph.json", "--out", str(out)])
     return out
 
 
@@ -276,10 +294,7 @@ def test_explain_ambiguous_lists_candidates(tmp_path, capsys):
 def test_path(built, capsys):
     capsys.readouterr()
     assert main(["path", "Main VPC", "Backend EC2", "--out", str(built)]) == 0
-    assert (
-        "Main VPC --contains--> App Subnet --contains--> Backend EC2"
-        in capsys.readouterr().out
-    )
+    assert "Main VPC --contains--> App Subnet --contains--> Backend EC2" in capsys.readouterr().out
 
 
 def test_path_against_direction_exits_nonzero(built, capsys):
@@ -292,4 +307,126 @@ def test_query_commands_need_a_build(tmp_path, capsys):
     missing = str(tmp_path / "nothing")
     for argv in (["stats"], ["query", "x"], ["explain", "x"], ["path", "a", "b"]):
         assert main([*argv, "--out", missing]) == 1
+    assert "awsgraph build" in capsys.readouterr().err
+
+
+def test_three_tier_build_and_query(tmp_path, capsys):
+    out = tmp_path / "out"
+    assert main(["build", "tests/fixtures/three-tier.awsgraph.json", "--out", str(out)]) == 0
+    printed = capsys.readouterr()
+    assert "$287.54 (priced)" in printed.out
+    assert printed.err == ""  # nothing unpriced
+
+    assert main(["estimate", "--out", str(out)]) == 0
+    estimate_output = capsys.readouterr().out
+    for service in ("EC2", "EBS", "RDS", "ALB", "NAT Gateway"):
+        assert service in estimate_output
+
+    assert main(["path", "Public ALB", "Main RDS", "--out", str(out)]) == 0
+    assert (
+        "Public ALB --connects-to--> Backend EC2 --connects-to--> Main RDS"
+        in capsys.readouterr().out
+    )
+
+    assert main(["path", "App Subnet", "Public NAT", "--out", str(out)]) == 0
+    assert "--routes-to-->" in capsys.readouterr().out
+
+
+def test_affected_follows_relation_direction(built_three_tier, capsys):
+    capsys.readouterr()
+    assert main(["affected", "Main RDS", "--out", str(built_three_tier)]) == 0
+    printed = capsys.readouterr().out
+    assert "Backend EC2" in printed and "Public ALB" in printed
+
+    assert main(["affected", "Main VPC", "--depth", "1", "--out", str(built_three_tier)]) == 0
+    depth_one = capsys.readouterr().out
+    assert "App Subnet" in depth_one
+    assert "Backend EC2" not in depth_one
+
+
+def test_affected_unknown_resource(built_three_tier, capsys):
+    capsys.readouterr()
+    assert main(["affected", "zzzz", "--out", str(built_three_tier)]) == 1
+    assert "no resource matches" in capsys.readouterr().err
+
+
+def test_layout_positions_reach_the_viewer(tmp_path):
+    design = json.loads(open("tests/fixtures/ec2.awsgraph.json", encoding="utf-8").read())
+    out = tmp_path / "out"
+    main(["build", "tests/fixtures/ec2.awsgraph.json", "--out", str(out)])
+    graph = json.loads((out / "graph.json").read_text(encoding="utf-8"))
+    placed = {n["id"]: n.get("position") for n in graph["nodes"]}
+    assert placed["res_ec2"] == design["layout"]["positions"]["res_ec2"]
+
+
+def test_viewer_has_no_position_when_the_design_omits_it(tmp_path):
+    design = tmp_path / "d.awsgraph.json"
+    design.write_text(
+        json.dumps(
+            {
+                "metadata": {"name": "T"},
+                "resources": [{"id": "v", "name": "VPC", "resource_type": "vpc"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    out = tmp_path / "out"
+    main(["build", str(design), "--out", str(out)])
+    graph = json.loads((out / "graph.json").read_text(encoding="utf-8"))
+    assert "position" not in graph["nodes"][0]
+
+
+def test_design_writes_a_standalone_html(tmp_path, capsys, monkeypatch):
+    import webbrowser
+
+    opened = []
+    monkeypatch.setattr(webbrowser, "open", lambda url: opened.append(url))
+    assert main(["design", "tests/fixtures/three-tier.awsgraph.json"]) == 0
+    assert len(opened) == 1
+
+    printed = capsys.readouterr().out
+    path = Path(printed.splitlines()[0].removeprefix("Designer: "))
+    assert path.is_file()
+    assert "Three Tier" in path.read_text(encoding="utf-8")
+
+
+def test_design_no_open(capsys, monkeypatch):
+    import webbrowser
+
+    monkeypatch.setattr(webbrowser, "open", lambda url: pytest.fail("should not open"))
+    assert main(["design", "tests/fixtures/ec2.awsgraph.json", "--no-open"]) == 0
+    assert "Designer:" in capsys.readouterr().out
+
+
+def test_design_rejects_an_invalid_file(tmp_path, capsys):
+    bad = tmp_path / "bad.awsgraph.json"
+    bad.write_text(json.dumps({"metadata": {"name": "T"}, "resources": [{"id": "a"}]}), "utf-8")
+    assert main(["design", str(bad)]) == 1
+    assert "is invalid" in capsys.readouterr().err
+
+
+def test_designer_export_round_trips_through_the_pipeline(tmp_path, capsys):
+    out = tmp_path / "out"
+    assert main(["build", "tests/fixtures/designer-export.awsgraph.json", "--out", str(out)]) == 0
+    assert (out / "graph.json").is_file()
+    assert capsys.readouterr().err == ""
+
+
+def test_export_graphml(built_three_tier, capsys):
+    capsys.readouterr()
+    assert main(["export", "--out", str(built_three_tier)]) == 0
+    path = built_three_tier / "graph.graphml"
+    assert path.is_file()
+
+    import networkx as nx
+
+    graph = nx.read_graphml(path)
+    assert graph.number_of_nodes() == 9
+    assert graph.number_of_edges() == 11
+    # Nested attributes survive as JSON text because GraphML holds scalars only.
+    assert json.loads(graph.nodes["ec2"]["configuration"])["instance_type"] == "t3.medium"
+
+
+def test_export_needs_a_build(tmp_path, capsys):
+    assert main(["export", "--out", str(tmp_path / "nothing")]) == 1
     assert "awsgraph build" in capsys.readouterr().err

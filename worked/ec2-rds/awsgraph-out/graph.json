@@ -1,0 +1,214 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "schema_version": "0.1",
+    "product_version": "0.1.0",
+    "architecture_name": "EC2 and RDS",
+    "region": "ap-northeast-2",
+    "currency": "USD",
+    "catalog_id": "ap-northeast-2-2026-09",
+    "estimate": {
+      "status": "priced",
+      "monthly_cost": "40.58",
+      "currency": "USD",
+      "catalog_id": "ap-northeast-2-2026-09",
+      "unpriced_resource_ids": []
+    }
+  },
+  "nodes": [
+    {
+      "label": "Main VPC",
+      "resource_type": "vpc",
+      "service": "VPC",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.0.0/16"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "res_vpc"
+    },
+    {
+      "label": "App Subnet",
+      "resource_type": "subnet",
+      "service": "Subnet",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.1.0/24",
+        "availability_zone": "ap-northeast-2a"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "res_app_subnet"
+    },
+    {
+      "label": "DB Subnet",
+      "resource_type": "subnet",
+      "service": "Subnet",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.2.0/24",
+        "availability_zone": "ap-northeast-2c"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "res_db_subnet"
+    },
+    {
+      "label": "App Server",
+      "resource_type": "ec2",
+      "service": "EC2",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "instance_type": "t3.small",
+        "operating_system": "linux",
+        "tenancy": "shared",
+        "purchase_option": "on-demand"
+      },
+      "usage": {
+        "instance_count": 1,
+        "hours_per_month": 730.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "18.98",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "instance hours",
+          "amount": "18.98",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "1 x t3.small at 730 h/month",
+        "on-demand linux, shared tenancy"
+      ],
+      "cost_missing": [],
+      "id": "res_ec2"
+    },
+    {
+      "label": "App Database",
+      "resource_type": "rds",
+      "service": "RDS",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "engine": "mysql",
+        "instance_class": "db.t3.micro",
+        "multi_az": false,
+        "storage_type": "gp3",
+        "storage_gib": 20
+      },
+      "usage": {
+        "instance_count": 1,
+        "hours_per_month": 730.0,
+        "storage_month_fraction": 1.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "monthly_cost": "21.60",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "instance hours",
+          "amount": "18.98",
+          "unit": "USD"
+        },
+        {
+          "name": "storage",
+          "amount": "2.62",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "1 x db.t3.micro mysql, Single-AZ, at 730 h/month",
+        "20 GiB gp3 storage per instance"
+      ],
+      "cost_missing": [],
+      "id": "res_rds"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_vpc_app",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_vpc",
+      "target": "res_app_subnet",
+      "key": "edge_vpc_app"
+    },
+    {
+      "id": "edge_vpc_db",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_vpc",
+      "target": "res_db_subnet",
+      "key": "edge_vpc_db"
+    },
+    {
+      "id": "edge_app_ec2",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_app_subnet",
+      "target": "res_ec2",
+      "key": "edge_app_ec2"
+    },
+    {
+      "id": "edge_db_rds",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_db_subnet",
+      "target": "res_rds",
+      "key": "edge_db_rds"
+    },
+    {
+      "id": "edge_ec2_rds",
+      "relation": "connects-to",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_ec2",
+      "target": "res_rds",
+      "key": "edge_ec2_rds"
+    }
+  ],
+  "awsgraph_schema_version": "0.1"
+}

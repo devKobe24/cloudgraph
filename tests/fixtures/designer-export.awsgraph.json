@@ -1,0 +1,196 @@
+{
+  "schema_version": "0.1",
+  "metadata": {
+    "name": "Designer Export"
+  },
+  "pricing_context": {
+    "region": "ap-northeast-2",
+    "currency": "USD",
+    "catalog_id": "ap-northeast-2-2026-09"
+  },
+  "resources": [
+    {
+      "id": "res_vpc",
+      "name": "VPC 1",
+      "region": "ap-northeast-2",
+      "resource_type": "vpc",
+      "configuration": {
+        "cidr_block": "10.0.0.0/16"
+      }
+    },
+    {
+      "id": "res_subnet",
+      "name": "Subnet 1",
+      "region": "ap-northeast-2",
+      "resource_type": "subnet",
+      "configuration": {
+        "cidr_block": "10.0.1.0/24",
+        "availability_zone": "ap-northeast-2a"
+      }
+    },
+    {
+      "id": "res_ec2",
+      "name": "EC2 1",
+      "region": "ap-northeast-2",
+      "resource_type": "ec2",
+      "configuration": {
+        "instance_type": "t3.medium",
+        "operating_system": "linux",
+        "tenancy": "shared",
+        "purchase_option": "on-demand"
+      },
+      "usage": {
+        "instance_count": 1,
+        "hours_per_month": 730
+      }
+    },
+    {
+      "id": "res_ebs",
+      "name": "EBS 1",
+      "region": "ap-northeast-2",
+      "resource_type": "ebs",
+      "configuration": {
+        "volume_type": "gp3",
+        "size_gib": 100
+      },
+      "usage": {
+        "volume_count": 1,
+        "month_fraction": 1
+      }
+    },
+    {
+      "id": "res_rds",
+      "name": "RDS 1",
+      "region": "ap-northeast-2",
+      "resource_type": "rds",
+      "configuration": {
+        "engine": "postgres",
+        "instance_class": "db.t3.medium",
+        "multi_az": false,
+        "storage_type": "gp3",
+        "storage_gib": 100
+      },
+      "usage": {
+        "instance_count": 1,
+        "hours_per_month": 730,
+        "storage_month_fraction": 1
+      }
+    },
+    {
+      "id": "res_alb",
+      "name": "ALB 1",
+      "region": "ap-northeast-2",
+      "resource_type": "alb",
+      "configuration": {
+        "scheme": "internet-facing"
+      },
+      "usage": {
+        "load_balancer_count": 1,
+        "hours_per_month": 730,
+        "lcu_hours_per_month": 0
+      }
+    },
+    {
+      "id": "res_nat_gateway",
+      "name": "NAT Gateway 1",
+      "region": "ap-northeast-2",
+      "resource_type": "nat-gateway",
+      "configuration": {
+        "connectivity_type": "public"
+      },
+      "usage": {
+        "gateway_count": 1,
+        "hours_per_month": 730,
+        "processed_gb_per_month": 0
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "edge_vpc_subnet_contains",
+      "source": "res_vpc",
+      "target": "res_subnet",
+      "relation": "contains"
+    },
+    {
+      "id": "edge_subnet_ec2_contains",
+      "source": "res_subnet",
+      "target": "res_ec2",
+      "relation": "contains"
+    },
+    {
+      "id": "edge_subnet_rds_contains",
+      "source": "res_subnet",
+      "target": "res_rds",
+      "relation": "contains"
+    },
+    {
+      "id": "edge_subnet_alb_contains",
+      "source": "res_subnet",
+      "target": "res_alb",
+      "relation": "contains"
+    },
+    {
+      "id": "edge_subnet_nat_gateway_contains",
+      "source": "res_subnet",
+      "target": "res_nat_gateway",
+      "relation": "contains"
+    },
+    {
+      "id": "edge_subnet_nat_gateway_routes_to",
+      "source": "res_subnet",
+      "target": "res_nat_gateway",
+      "relation": "routes-to"
+    },
+    {
+      "id": "edge_ec2_ebs_attached_to",
+      "source": "res_ec2",
+      "target": "res_ebs",
+      "relation": "attached-to"
+    },
+    {
+      "id": "edge_ec2_rds_connects_to",
+      "source": "res_ec2",
+      "target": "res_rds",
+      "relation": "connects-to"
+    },
+    {
+      "id": "edge_alb_ec2_connects_to",
+      "source": "res_alb",
+      "target": "res_ec2",
+      "relation": "connects-to"
+    }
+  ],
+  "layout": {
+    "positions": {
+      "res_vpc": {
+        "x": 0,
+        "y": 0
+      },
+      "res_subnet": {
+        "x": 210,
+        "y": 0
+      },
+      "res_ec2": {
+        "x": 420,
+        "y": 0
+      },
+      "res_ebs": {
+        "x": 0,
+        "y": 130
+      },
+      "res_rds": {
+        "x": 210,
+        "y": 130
+      },
+      "res_alb": {
+        "x": 420,
+        "y": 130
+      },
+      "res_nat_gateway": {
+        "x": 0,
+        "y": 260
+      }
+    }
+  }
+}

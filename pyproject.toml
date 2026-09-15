@@ -26,7 +26,24 @@ include-package-data = true
 awsgraph = ["assets/*", "data/pricing/*.json"]
 
 [dependency-groups]
-dev = ["pytest>=9"]
+dev = [
+  "pytest>=9",
+  "hypothesis>=6",
+  "ruff",
+  "bandit",
+  "pip-audit",
+  "pre-commit",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]

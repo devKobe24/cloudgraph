@@ -1,0 +1,133 @@
+{
+  "directed": true,
+  "multigraph": true,
+  "graph": {
+    "schema_version": "0.1",
+    "product_version": "0.1.0",
+    "architecture_name": "EC2 Only",
+    "region": "ap-northeast-2",
+    "currency": "USD",
+    "catalog_id": "ap-northeast-2-2026-09",
+    "estimate": {
+      "status": "priced",
+      "monthly_cost": "75.92",
+      "currency": "USD",
+      "catalog_id": "ap-northeast-2-2026-09",
+      "unpriced_resource_ids": []
+    }
+  },
+  "nodes": [
+    {
+      "label": "Main VPC",
+      "resource_type": "vpc",
+      "service": "VPC",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.0.0/16"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "res_vpc"
+    },
+    {
+      "label": "App Subnet",
+      "resource_type": "subnet",
+      "service": "Subnet",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "cidr_block": "10.0.1.0/24",
+        "availability_zone": "ap-northeast-2a"
+      },
+      "usage": {},
+      "provenance": {
+        "kind": "declared"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 120.0
+      },
+      "monthly_cost": "0.00",
+      "cost_status": "priced",
+      "cost_breakdown": [],
+      "cost_assumptions": [
+        "structural resource: v0.1 assigns no cost to this node itself"
+      ],
+      "cost_missing": [],
+      "id": "res_subnet"
+    },
+    {
+      "label": "Backend EC2",
+      "resource_type": "ec2",
+      "service": "EC2",
+      "region": "ap-northeast-2",
+      "configuration": {
+        "instance_type": "t3.medium",
+        "operating_system": "linux",
+        "tenancy": "shared",
+        "purchase_option": "on-demand"
+      },
+      "usage": {
+        "instance_count": 2,
+        "hours_per_month": 730.0
+      },
+      "provenance": {
+        "kind": "declared"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 240.0
+      },
+      "monthly_cost": "75.92",
+      "cost_status": "priced",
+      "cost_breakdown": [
+        {
+          "name": "instance hours",
+          "amount": "75.92",
+          "unit": "USD"
+        }
+      ],
+      "cost_assumptions": [
+        "2 x t3.medium at 730 h/month",
+        "on-demand linux, shared tenancy"
+      ],
+      "cost_missing": [],
+      "id": "res_ec2"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge_vpc_subnet",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_vpc",
+      "target": "res_subnet",
+      "key": "edge_vpc_subnet"
+    },
+    {
+      "id": "edge_subnet_ec2",
+      "relation": "contains",
+      "provenance": {
+        "kind": "declared"
+      },
+      "source": "res_subnet",
+      "target": "res_ec2",
+      "key": "edge_subnet_ec2"
+    }
+  ],
+  "awsgraph_schema_version": "0.1"
+}

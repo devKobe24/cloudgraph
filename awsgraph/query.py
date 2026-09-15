@@ -192,7 +192,7 @@ def render_path(graph: nx.MultiDiGraph, source: str, target: str) -> str | None:
         return None
 
     parts = [graph.nodes[hops[0]]["label"]]
-    for left, right in zip(hops, hops[1:]):
+    for left, right in zip(hops, hops[1:], strict=False):
         # Parallel edges: name every relation that joins the pair.
         relations = sorted({a["relation"] for a in graph.get_edge_data(left, right).values()})
         parts.append(f"--{' | '.join(relations)}-->")

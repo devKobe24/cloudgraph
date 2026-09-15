@@ -31,8 +31,10 @@ def build(architecture: Architecture) -> nx.MultiDiGraph:
         catalog_id=architecture.pricing_context.catalog_id,
     )
 
+    positions = architecture.layout.positions
     for resource in architecture.resources:
         usage = getattr(resource, "usage", None)
+        position = positions.get(resource.id)
         graph.add_node(
             resource.id,
             label=resource.name,
@@ -43,6 +45,9 @@ def build(architecture: Architecture) -> nx.MultiDiGraph:
             usage=usage.model_dump() if usage is not None else {},
             # v0.1 nodes are user-declared; the v0.2 scanner writes kind="discovered".
             provenance={"kind": "declared"},
+            # Carried through so the viewer can honour the layout the user arranged
+            # instead of auto-placing every node.
+            **({"position": position.model_dump()} if position else {}),
         )
 
     for relationship in architecture.relationships:

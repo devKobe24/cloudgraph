@@ -64,8 +64,7 @@ def validate_design(architecture: Architecture) -> list[str]:
         allowed = CONNECTION_RULES.get((source_type, target_type))
         if allowed is None:
             errors.append(
-                f"{where}.relation: no relationship is allowed "
-                f"from {source_type} to {target_type}"
+                f"{where}.relation: no relationship is allowed from {source_type} to {target_type}"
             )
         elif rel.relation not in allowed:
             errors.append(

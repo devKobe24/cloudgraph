@@ -88,9 +88,7 @@ def test_pair_with_no_allowed_relation():
         [resource("v", "vpc"), resource("a", "ec2")],
         [{"id": "e1", "source": "v", "target": "a", "relation": "contains"}],
     )
-    assert errors == [
-        "relationships[0].relation: no relationship is allowed from vpc to ec2"
-    ]
+    assert errors == ["relationships[0].relation: no relationship is allowed from vpc to ec2"]
 
 
 def test_duplicate_relationship_triple():
@@ -101,9 +99,7 @@ def test_duplicate_relationship_triple():
             {"id": "e2", "source": "a", "target": "b", "relation": "connects-to"},
         ],
     )
-    assert errors == [
-        "relationships[1]: duplicate 'connects-to' relationship from 'a' to 'b'"
-    ]
+    assert errors == ["relationships[1]: duplicate 'connects-to' relationship from 'a' to 'b'"]
 
 
 def test_all_errors_reported_not_just_the_first():
@@ -119,22 +115,33 @@ def test_all_errors_reported_not_just_the_first():
 
 def test_subnet_contains_alb():
     errors = check(
-        [resource("s", "subnet"), resource("lb", "alb", usage={
-            "load_balancer_count": 1,
-            "hours_per_month": 730,
-            "lcu_hours_per_month": 100,
-        })],
+        [
+            resource("s", "subnet"),
+            resource(
+                "lb",
+                "alb",
+                usage={
+                    "load_balancer_count": 1,
+                    "hours_per_month": 730,
+                    "lcu_hours_per_month": 100,
+                },
+            ),
+        ],
         [{"id": "e1", "source": "s", "target": "lb", "relation": "contains"}],
     )
     assert errors == []
 
 
 def test_subnet_may_both_contain_and_route_to_a_nat_gateway():
-    nat = resource("n", "nat-gateway", usage={
-        "gateway_count": 1,
-        "hours_per_month": 730,
-        "processed_gb_per_month": 50,
-    })
+    nat = resource(
+        "n",
+        "nat-gateway",
+        usage={
+            "gateway_count": 1,
+            "hours_per_month": 730,
+            "processed_gb_per_month": 50,
+        },
+    )
     errors = check(
         [resource("public", "subnet"), resource("private", "subnet"), nat],
         [
@@ -146,11 +153,15 @@ def test_subnet_may_both_contain_and_route_to_a_nat_gateway():
 
 
 def test_disallowed_relation_lists_every_allowed_one():
-    nat = resource("n", "nat-gateway", usage={
-        "gateway_count": 1,
-        "hours_per_month": 730,
-        "processed_gb_per_month": 50,
-    })
+    nat = resource(
+        "n",
+        "nat-gateway",
+        usage={
+            "gateway_count": 1,
+            "hours_per_month": 730,
+            "processed_gb_per_month": 50,
+        },
+    )
     errors = check(
         [resource("s", "subnet"), nat],
         [{"id": "e1", "source": "s", "target": "n", "relation": "connects-to"}],

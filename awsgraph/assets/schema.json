@@ -1,0 +1,788 @@
+{
+  "$defs": {
+    "AlbConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "scheme": {
+          "default": "internet-facing",
+          "enum": [
+            "internet-facing",
+            "internal"
+          ],
+          "title": "Scheme",
+          "type": "string"
+        }
+      },
+      "title": "AlbConfiguration",
+      "type": "object"
+    },
+    "AlbResource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "alb",
+          "default": "alb",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/AlbConfiguration",
+          "default": {
+            "scheme": "internet-facing"
+          }
+        },
+        "usage": {
+          "$ref": "#/$defs/AlbUsage"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "usage"
+      ],
+      "title": "AlbResource",
+      "type": "object"
+    },
+    "AlbUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "load_balancer_count": {
+          "minimum": 1,
+          "title": "Load Balancer Count",
+          "type": "integer"
+        },
+        "hours_per_month": {
+          "maximum": 744,
+          "minimum": 0,
+          "title": "Hours Per Month",
+          "type": "number"
+        },
+        "lcu_hours_per_month": {
+          "minimum": 0,
+          "title": "Lcu Hours Per Month",
+          "type": "number"
+        }
+      },
+      "required": [
+        "load_balancer_count",
+        "hours_per_month",
+        "lcu_hours_per_month"
+      ],
+      "title": "AlbUsage",
+      "type": "object"
+    },
+    "ArchitectureMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "ArchitectureMetadata",
+      "type": "object"
+    },
+    "AwsRelationship": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "target": {
+          "minLength": 1,
+          "title": "Target",
+          "type": "string"
+        },
+        "relation": {
+          "enum": [
+            "contains",
+            "attached-to",
+            "routes-to",
+            "connects-to"
+          ],
+          "title": "Relation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "target",
+        "relation"
+      ],
+      "title": "AwsRelationship",
+      "type": "object"
+    },
+    "EbsConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "volume_type": {
+          "const": "gp3",
+          "default": "gp3",
+          "title": "Volume Type",
+          "type": "string"
+        },
+        "size_gib": {
+          "minimum": 1,
+          "title": "Size Gib",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "size_gib"
+      ],
+      "title": "EbsConfiguration",
+      "type": "object"
+    },
+    "EbsResource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "ebs",
+          "default": "ebs",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/EbsConfiguration"
+        },
+        "usage": {
+          "$ref": "#/$defs/EbsUsage"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "configuration",
+        "usage"
+      ],
+      "title": "EbsResource",
+      "type": "object"
+    },
+    "EbsUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "volume_count": {
+          "minimum": 1,
+          "title": "Volume Count",
+          "type": "integer"
+        },
+        "month_fraction": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Month Fraction",
+          "type": "number"
+        }
+      },
+      "required": [
+        "volume_count"
+      ],
+      "title": "EbsUsage",
+      "type": "object"
+    },
+    "Ec2Configuration": {
+      "additionalProperties": false,
+      "properties": {
+        "instance_type": {
+          "minLength": 1,
+          "title": "Instance Type",
+          "type": "string"
+        },
+        "operating_system": {
+          "const": "linux",
+          "default": "linux",
+          "title": "Operating System",
+          "type": "string"
+        },
+        "tenancy": {
+          "const": "shared",
+          "default": "shared",
+          "title": "Tenancy",
+          "type": "string"
+        },
+        "purchase_option": {
+          "const": "on-demand",
+          "default": "on-demand",
+          "title": "Purchase Option",
+          "type": "string"
+        }
+      },
+      "required": [
+        "instance_type"
+      ],
+      "title": "Ec2Configuration",
+      "type": "object"
+    },
+    "Ec2Resource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "ec2",
+          "default": "ec2",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/Ec2Configuration"
+        },
+        "usage": {
+          "$ref": "#/$defs/Ec2Usage"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "configuration",
+        "usage"
+      ],
+      "title": "Ec2Resource",
+      "type": "object"
+    },
+    "Ec2Usage": {
+      "additionalProperties": false,
+      "properties": {
+        "instance_count": {
+          "minimum": 1,
+          "title": "Instance Count",
+          "type": "integer"
+        },
+        "hours_per_month": {
+          "maximum": 744,
+          "minimum": 0,
+          "title": "Hours Per Month",
+          "type": "number"
+        }
+      },
+      "required": [
+        "instance_count",
+        "hours_per_month"
+      ],
+      "title": "Ec2Usage",
+      "type": "object"
+    },
+    "Layout": {
+      "additionalProperties": false,
+      "properties": {
+        "positions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Position"
+          },
+          "default": {},
+          "title": "Positions",
+          "type": "object"
+        }
+      },
+      "title": "Layout",
+      "type": "object"
+    },
+    "NatGatewayConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "connectivity_type": {
+          "const": "public",
+          "default": "public",
+          "title": "Connectivity Type",
+          "type": "string"
+        }
+      },
+      "title": "NatGatewayConfiguration",
+      "type": "object"
+    },
+    "NatGatewayResource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "nat-gateway",
+          "default": "nat-gateway",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/NatGatewayConfiguration",
+          "default": {
+            "connectivity_type": "public"
+          }
+        },
+        "usage": {
+          "$ref": "#/$defs/NatGatewayUsage"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "usage"
+      ],
+      "title": "NatGatewayResource",
+      "type": "object"
+    },
+    "NatGatewayUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "gateway_count": {
+          "minimum": 1,
+          "title": "Gateway Count",
+          "type": "integer"
+        },
+        "hours_per_month": {
+          "maximum": 744,
+          "minimum": 0,
+          "title": "Hours Per Month",
+          "type": "number"
+        },
+        "processed_gb_per_month": {
+          "minimum": 0,
+          "title": "Processed Gb Per Month",
+          "type": "number"
+        }
+      },
+      "required": [
+        "gateway_count",
+        "hours_per_month",
+        "processed_gb_per_month"
+      ],
+      "title": "NatGatewayUsage",
+      "type": "object"
+    },
+    "Position": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Position",
+      "type": "object"
+    },
+    "PricingContext": {
+      "additionalProperties": false,
+      "properties": {
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "currency": {
+          "const": "USD",
+          "default": "USD",
+          "title": "Currency",
+          "type": "string"
+        },
+        "catalog_id": {
+          "default": "ap-northeast-2-2026-09",
+          "title": "Catalog Id",
+          "type": "string"
+        }
+      },
+      "title": "PricingContext",
+      "type": "object"
+    },
+    "RdsConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "enum": [
+            "mysql",
+            "postgres"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "instance_class": {
+          "minLength": 1,
+          "title": "Instance Class",
+          "type": "string"
+        },
+        "multi_az": {
+          "const": false,
+          "default": false,
+          "title": "Multi Az",
+          "type": "boolean"
+        },
+        "storage_type": {
+          "const": "gp3",
+          "default": "gp3",
+          "title": "Storage Type",
+          "type": "string"
+        },
+        "storage_gib": {
+          "minimum": 20,
+          "title": "Storage Gib",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "engine",
+        "instance_class",
+        "storage_gib"
+      ],
+      "title": "RdsConfiguration",
+      "type": "object"
+    },
+    "RdsResource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "rds",
+          "default": "rds",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/RdsConfiguration"
+        },
+        "usage": {
+          "$ref": "#/$defs/RdsUsage"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "configuration",
+        "usage"
+      ],
+      "title": "RdsResource",
+      "type": "object"
+    },
+    "RdsUsage": {
+      "additionalProperties": false,
+      "properties": {
+        "instance_count": {
+          "minimum": 1,
+          "title": "Instance Count",
+          "type": "integer"
+        },
+        "hours_per_month": {
+          "maximum": 744,
+          "minimum": 0,
+          "title": "Hours Per Month",
+          "type": "number"
+        },
+        "storage_month_fraction": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Storage Month Fraction",
+          "type": "number"
+        }
+      },
+      "required": [
+        "instance_count",
+        "hours_per_month"
+      ],
+      "title": "RdsUsage",
+      "type": "object"
+    },
+    "SubnetConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "cidr_block": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cidr Block"
+        },
+        "availability_zone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Availability Zone"
+        }
+      },
+      "title": "SubnetConfiguration",
+      "type": "object"
+    },
+    "SubnetResource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "subnet",
+          "default": "subnet",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/SubnetConfiguration",
+          "default": {
+            "cidr_block": null,
+            "availability_zone": null
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "SubnetResource",
+      "type": "object"
+    },
+    "VpcConfiguration": {
+      "additionalProperties": false,
+      "properties": {
+        "cidr_block": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cidr Block"
+        }
+      },
+      "title": "VpcConfiguration",
+      "type": "object"
+    },
+    "VpcResource": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "region": {
+          "const": "ap-northeast-2",
+          "default": "ap-northeast-2",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "const": "vpc",
+          "default": "vpc",
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "configuration": {
+          "$ref": "#/$defs/VpcConfiguration",
+          "default": {
+            "cidr_block": null
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "VpcResource",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.1",
+      "default": "0.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "metadata": {
+      "$ref": "#/$defs/ArchitectureMetadata"
+    },
+    "pricing_context": {
+      "$ref": "#/$defs/PricingContext",
+      "default": {
+        "region": "ap-northeast-2",
+        "currency": "USD",
+        "catalog_id": "ap-northeast-2-2026-09"
+      }
+    },
+    "resources": {
+      "default": [],
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "alb": "#/$defs/AlbResource",
+            "ebs": "#/$defs/EbsResource",
+            "ec2": "#/$defs/Ec2Resource",
+            "nat-gateway": "#/$defs/NatGatewayResource",
+            "rds": "#/$defs/RdsResource",
+            "subnet": "#/$defs/SubnetResource",
+            "vpc": "#/$defs/VpcResource"
+          },
+          "propertyName": "resource_type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/VpcResource"
+          },
+          {
+            "$ref": "#/$defs/SubnetResource"
+          },
+          {
+            "$ref": "#/$defs/Ec2Resource"
+          },
+          {
+            "$ref": "#/$defs/EbsResource"
+          },
+          {
+            "$ref": "#/$defs/RdsResource"
+          },
+          {
+            "$ref": "#/$defs/AlbResource"
+          },
+          {
+            "$ref": "#/$defs/NatGatewayResource"
+          }
+        ]
+      },
+      "title": "Resources",
+      "type": "array"
+    },
+    "relationships": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/AwsRelationship"
+      },
+      "title": "Relationships",
+      "type": "array"
+    },
+    "layout": {
+      "$ref": "#/$defs/Layout",
+      "default": {
+        "positions": {}
+      }
+    }
+  },
+  "required": [
+    "metadata"
+  ],
+  "title": "Architecture",
+  "type": "object"
+}

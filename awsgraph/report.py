@@ -62,7 +62,23 @@ def generate(graph: nx.MultiDiGraph, analysis: dict, source: str | None = None) 
         lines.append(f"| {service} | {_money(amount, currency)} |")
     lines.append("")
 
-    lines += ["## Architecture Overview", "", "| Resource | Type | Monthly | Status |", "|---|---|---|---|"]
+    lines += ["## Cost Hotspots", ""]
+    if not analysis["cost_hotspots"]:
+        lines.append("_Nothing in this architecture has a cost above zero._")
+    else:
+        for rank, item in enumerate(analysis["cost_hotspots"], start=1):
+            lines.append(
+                f"{rank}. {item['label']} ({item['service']}) "
+                f"{_money(item['monthly_cost'], currency)}"
+            )
+    lines.append("")
+
+    lines += [
+        "## Architecture Overview",
+        "",
+        "| Resource | Type | Monthly | Status |",
+        "|---|---|---|---|",
+    ]
     for _, attrs in sorted(graph.nodes(data=True), key=lambda kv: kv[1]["label"]):
         lines.append(
             f"| {attrs['label']} | {attrs['resource_type']} | "
@@ -81,13 +97,45 @@ def generate(graph: nx.MultiDiGraph, analysis: dict, source: str | None = None) 
             lines.append(f"- {source_label} --{attrs['relation']}--> {target_label}")
     lines.append("")
 
+    lines += ["## Dependency Hubs", ""]
+    if not analysis["dependency_hubs"]:
+        lines.append("_No resource has two or more connections._")
+    else:
+        for item in analysis["dependency_hubs"]:
+            lines.append(
+                f"- {item['label']} ({item['service']}): "
+                f"{item['in_degree']} in, {item['out_degree']} out"
+            )
+    lines.append("")
+
+    lines += ["## Isolated Resources", ""]
+    if not analysis["isolated"]:
+        lines.append("_Every resource is connected to at least one other._")
+    else:
+        for item in analysis["isolated"]:
+            lines.append(f"- {item['label']} ({item['service']})")
+    lines.append("")
+
+    lines += ["## Architecture Warnings", ""]
+    if not analysis["warnings"]:
+        lines.append("_No modelling warnings._")
+    else:
+        lines.append(
+            "These are modelling observations about the design file, not security findings."
+        )
+        lines.append("")
+        for warning in analysis["warnings"]:
+            for node_id in warning["resource_ids"]:
+                lines.append(f"- {graph.nodes[node_id]['label']}: {warning['message']}")
+    lines.append("")
+
     lines += ["## Unpriced Resources", ""]
     if not analysis["unpriced"]:
         lines.append("_Every resource was priced._")
     else:
         for item in analysis["unpriced"]:
             reasons = "; ".join(item["missing"]) or "no reason recorded"
-            lines.append(f"- {item['label']} ({item['service']}): {reasons}")
+            lines.append(f"- {item['label']} ({item['service']}) [{item['status']}]: {reasons}")
     lines.append("")
 
     lines += ["## Assumptions and Exclusions", ""]

@@ -53,23 +53,30 @@ def test_missing_rate_is_unpriced_not_zero():
     graph, summary = costed([ec2(instance_type="t4g.large")])
     node = graph.nodes["a"]
     assert node["cost_status"] == "unpriced"
-    assert node["cost_missing"] == [
-        "missing price: ec2/linux/shared/on-demand/t4g.large"
-    ]
+    assert node["cost_missing"] == ["missing price: ec2/linux/shared/on-demand/t4g.large"]
     assert summary["status"] == "partial"
     assert summary["unpriced_resource_ids"] == ["a"]
 
 
-def test_resource_without_a_calculator_is_unpriced():
-    rds = {
-        "id": "b",
-        "name": "DB",
-        "resource_type": "rds",
-        "configuration": {"engine": "mysql", "instance_class": "db.t3.medium", "storage_gib": 100},
-        "usage": {"instance_count": 1, "hours_per_month": 730},
-    }
-    graph, summary = costed([rds])
-    assert graph.nodes["b"]["cost_status"] == "unpriced"
+def test_unknown_resource_type_is_unpriced():
+    # The schema only allows seven types, but a graph.json written by a newer
+    # version can carry one this build has no calculator for.
+    graph, _ = costed([ec2()])
+    graph.add_node(
+        "future",
+        label="Lambda",
+        resource_type="lambda",
+        service="Lambda",
+        region="ap-northeast-2",
+        configuration={},
+        usage={},
+        provenance={"kind": "declared"},
+    )
+    summary = estimate(graph, CATALOG)
+    assert graph.nodes["future"]["cost_status"] == "unpriced"
+    assert graph.nodes["future"]["cost_missing"] == [
+        "missing price: no calculator for resource type 'lambda'"
+    ]
     assert summary["status"] == "partial"
 
 

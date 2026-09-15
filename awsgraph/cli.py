@@ -9,10 +9,12 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from . import __version__, report
+from .affected import render_affected
 from .analyze import analyze
 from .build import build
+from .design import DesignerAssetError, open_designer
 from .estimate import estimate
-from .export import to_html, to_json_payload
+from .export import FORMATS, to_html, to_json_payload
 from .load import DesignError, load_design, load_graph
 from .paths import resolve_out_dir, write_json_atomic, write_text_atomic
 from .pricing import CatalogError, load_catalog
@@ -55,6 +57,13 @@ def _init_args(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _design_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("file", help="design file to open in the designer")
+    parser.add_argument(
+        "--no-open", action="store_true", help="write the designer HTML but do not open it"
+    )
+
+
 def _validate_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("file", help="path of the design file to validate")
 
@@ -81,6 +90,19 @@ def _explain_args(parser: argparse.ArgumentParser) -> None:
     _graph_args(parser)
 
 
+def _affected_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("resource", help="resource that changes")
+    _graph_args(parser)
+    parser.add_argument("--depth", type=int, default=None, help="limit traversal depth")
+
+
+def _export_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--format", choices=sorted(FORMATS), default="graphml", help="output format"
+    )
+    _graph_args(parser)
+
+
 def _path_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("source", help="start resource")
     parser.add_argument("target", help="end resource")
@@ -90,12 +112,15 @@ def _path_args(parser: argparse.ArgumentParser) -> None:
 ARG_ADDERS: dict[str, Callable[[argparse.ArgumentParser], None]] = {
     "init": _init_args,
     "validate": _validate_args,
+    "design": _design_args,
     "build": _build_args,
     "estimate": _estimate_args,
     "stats": _graph_args,
     "query": _query_args,
     "explain": _explain_args,
     "path": _path_args,
+    "affected": _affected_args,
+    "export": _export_args,
 }
 
 
@@ -167,6 +192,38 @@ def cmd_validate(args: argparse.Namespace) -> int:
         f"({len(architecture.resources)} resources, "
         f"{len(architecture.relationships)} relationships)"
     )
+    return 0
+
+
+def cmd_design(args: argparse.Namespace) -> int:
+    try:
+        architecture = load_design(args.file)
+    except DesignError as exc:
+        return _print_errors(args.file, exc.messages)
+
+    errors = validate_design(architecture)
+    if errors:
+        return _print_errors(args.file, errors)
+
+    try:
+        catalog = load_catalog(
+            architecture.pricing_context.region, architecture.pricing_context.catalog_id
+        )
+    except CatalogError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        path = open_designer(architecture, catalog, open_browser=not args.no_open)
+    except DesignerAssetError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        print(
+            "The rest of the CLI still works: build, estimate, query, path, explain.",
+            file=sys.stderr,
+        )
+        return 1
+    print(f"Designer: {path}")
+    print("Export from the designer and save over your design file to keep the changes.")
     return 0
 
 
@@ -299,15 +356,39 @@ def cmd_path(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_affected(args: argparse.Namespace) -> int:
+    graph = _open_graph(args)
+    if graph is None:
+        return 1
+    node_id = _resolve_one(graph, args.resource)
+    if node_id is None:
+        return 1
+    print(render_affected(graph, node_id, args.depth))
+    return 0
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    graph = _open_graph(args)
+    if graph is None:
+        return 1
+    render, filename = FORMATS[args.format]
+    path = write_text_atomic(resolve_out_dir(args.out) / filename, render(graph))
+    print(f"Wrote {path}")
+    return 0
+
+
 COMMANDS: dict[str, Callable[[argparse.Namespace], int]] = {
     "init": cmd_init,
     "validate": cmd_validate,
+    "design": cmd_design,
     "build": cmd_build,
     "estimate": cmd_estimate,
     "stats": cmd_stats,
     "query": cmd_query,
     "explain": cmd_explain,
     "path": cmd_path,
+    "affected": cmd_affected,
+    "export": cmd_export,
 }
 
 

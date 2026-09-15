@@ -13,6 +13,20 @@
     "ec2/linux/shared/on-demand/m5.large": "0.1180",
     "ec2/linux/shared/on-demand/m5.xlarge": "0.2360",
     "ec2/linux/shared/on-demand/c5.large": "0.0960",
-    "ec2/linux/shared/on-demand/r5.large": "0.1600"
+    "ec2/linux/shared/on-demand/r5.large": "0.1600",
+    "ebs/gp3/gb-month": "0.0912",
+    "rds/mysql/single-az/on-demand/db.t3.micro": "0.0260",
+    "rds/mysql/single-az/on-demand/db.t3.small": "0.0520",
+    "rds/mysql/single-az/on-demand/db.t3.medium": "0.1040",
+    "rds/mysql/single-az/on-demand/db.m5.large": "0.2400",
+    "rds/postgres/single-az/on-demand/db.t3.micro": "0.0270",
+    "rds/postgres/single-az/on-demand/db.t3.small": "0.0540",
+    "rds/postgres/single-az/on-demand/db.t3.medium": "0.1080",
+    "rds/postgres/single-az/on-demand/db.m5.large": "0.2490",
+    "rds/storage/gp3/gb-month": "0.1310",
+    "alb/load-balancer-hour": "0.0225",
+    "alb/lcu-hour": "0.0080",
+    "nat-gateway/gateway-hour": "0.0590",
+    "nat-gateway/processed-gb": "0.0590"
   }
 }

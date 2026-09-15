@@ -1,0 +1,24 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-json
+      - id: check-yaml
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      # Catches a schema.py edit that was not regenerated. Fast: no Node needed.
+      - id: codegen-check
+        name: generated web assets match schema.py
+        entry: uv run --frozen python -m tools.codegen --check
+        language: system
+        pass_filenames: false
+        files: ^(awsgraph/schema\.py|awsgraph/validate\.py|tools/codegen\.py|webui/src/generated/.*)$

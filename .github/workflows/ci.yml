@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  generated-assets:
+    name: generated assets are current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webui/package-lock.json
+      - run: uv sync --frozen
+      # schema.py is the source of truth. These fail if the committed web assets
+      # no longer match it.
+      - run: uv run --frozen python -m tools.codegen --check
+      - run: uv run --frozen python -m tools.build_web --check
+
+  test:
+    name: pytest (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --frozen
+      - run: uv run --frozen pytest tests/ -q --tb=short
+      - run: uv run --frozen awsgraph --help
+      - run: uv run --frozen awsgraph --version
+      - name: build a design end to end
+        run: |
+          uv run --frozen awsgraph build tests/fixtures/three-tier.awsgraph.json --out /tmp/awsgraph-out
+          test -f /tmp/awsgraph-out/graph.json
+          test -f /tmp/awsgraph-out/graph.html
+          test -f /tmp/awsgraph-out/AWS_REPORT.md
+
+  wheel:
+    name: wheel installs clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+      - run: uv build --wheel -o dist
+      # A fresh environment with no Node and no repo checkout on the path.
+      - run: uv venv /tmp/clean
+      - run: VIRTUAL_ENV=/tmp/clean uv pip install dist/*.whl
+      - run: /tmp/clean/bin/awsgraph --version
+      - run: /tmp/clean/bin/awsgraph design tests/fixtures/ec2.awsgraph.json --no-open
+
+  web:
+    name: webui
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webui/package-lock.json
+      - run: npm ci
+        working-directory: webui
+      # Runs the shared pricing fixture: the designer preview must agree with
+      # the Python estimator case for case.
+      - run: npm test
+        working-directory: webui
+      - run: npm run build
+        working-directory: webui
+
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen
+      - run: uv run --frozen ruff check awsgraph tools tests
+      - run: uv run --frozen ruff format --check awsgraph tools tests
+
+  security:
+    name: security (advisory)
+    runs-on: ubuntu-latest
+    # Advisory on purpose: these fail on new upstream advisories that have
+    # nothing to do with the change under review. Read the output, do not
+    # assume green means clean.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen
+      - run: uv run --frozen bandit -r awsgraph -ll
+      # Audit the locked dependencies. Auditing the project itself fails: awsgraph
+      # is not on PyPI, so pip-audit cannot look it up.
+      - run: uv export --frozen --no-emit-project --no-dev --format requirements-txt -o /tmp/req.txt
+      - run: uv run --frozen pip-audit -r /tmp/req.txt --strict

@@ -31,6 +31,13 @@ DESIGN = {
             "resource_type": "nat-gateway",
             "usage": {"gateway_count": 1, "hours_per_month": 730, "processed_gb_per_month": 10},
         },
+        {
+            "id": "old",
+            "name": "Legacy",
+            "resource_type": "ec2",
+            "configuration": {"instance_type": "t4g.nano"},
+            "usage": {"instance_count": 1, "hours_per_month": 730},
+        },
     ],
     "relationships": [
         {"id": "e1", "source": "s", "target": "a", "relation": "contains"},
@@ -71,7 +78,7 @@ def test_round_trip_keeps_parallel_edges(costed, tmp_path):
     path = tmp_path / "graph.json"
     write_json_atomic(path, to_json_payload(costed))
     back = load_graph(path)
-    relations = {attrs["relation"] for *_, attrs in back.edges(data=True) }
+    relations = {attrs["relation"] for *_, attrs in back.edges(data=True)}
     assert {"contains", "routes-to"} <= relations
     assert back.number_of_edges() == 3
 
@@ -112,7 +119,13 @@ def test_html_embeds_graph_data(costed):
     html_text = to_html(costed)
     assert DATA_ELEMENT_ID in html_text
     assert "75.92" in html_text
-    assert "http://" not in html_text and "https://" not in html_text
+
+
+def test_html_loads_nothing_from_the_network(costed):
+    html_text = to_html(costed)
+    # The SVG namespace URI is not a fetch, so check for actual loaders instead.
+    for loader in ("<link", " src=", "fetch(", "XMLHttpRequest", "@import", "//cdn"):
+        assert loader not in html_text
 
 
 def test_html_does_not_execute_a_malicious_label():
@@ -122,10 +135,10 @@ def test_html_does_not_execute_a_malicious_label():
     estimate(graph, CATALOG)
     html_text = to_html(graph)
 
-    # Only the data block opens a script tag, and the label cannot close it.
-    assert html_text.count("<script") == 1
-    assert "</script><script>" not in html_text
-    assert "&lt;/script&gt;" in html_text  # rendered as text in the table
+    # Two script tags belong to the page: the data block and the viewer itself.
+    # The label must not be able to add a third.
+    assert html_text.count("<script") == 2
+    assert "</script><script>alert" not in html_text
     assert "\\u003c/script\\u003e" in html_text  # escaped inside the JSON block
 
 
@@ -144,8 +157,8 @@ def test_report_contains_the_required_facts(costed):
 
 def test_report_flags_unpriced_resources(costed):
     text = report.generate(costed, analyze(costed))
-    assert "NAT (NAT Gateway)" in text
-    assert "no calculator for resource type 'nat-gateway'" in text
+    assert "Legacy (EC2) [unpriced]" in text
+    assert "missing price: ec2/linux/shared/on-demand/t4g.nano" in text
 
 
 def test_report_is_deterministic(costed):

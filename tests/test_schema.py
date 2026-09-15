@@ -70,7 +70,9 @@ def test_hours_above_744_rejected():
     data = design()
     data["resources"][0]["usage"]["hours_per_month"] = 745
     found = messages(data)
-    assert found == ["resources[0].usage.hours_per_month: Input should be less than or equal to 744"]
+    assert found == [
+        "resources[0].usage.hours_per_month: Input should be less than or equal to 744"
+    ]
 
 
 def test_zero_instance_count_rejected():

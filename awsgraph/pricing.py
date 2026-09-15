@@ -9,7 +9,7 @@ Rules that do not bend (guide sections 13.1 / 13.9):
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
 from importlib import resources
@@ -103,6 +103,47 @@ def load_catalog(region: str, catalog_id: str | None = None) -> PricingCatalog:
 
 # --- calculators -----------------------------------------------------------
 # Every calculator takes (configuration, usage, catalog) so the registry stays flat.
+# Each one declares its cost components and lets _compose do the lookups, so a
+# half-priced resource reports status "partial" instead of a quietly low number.
+
+
+def _compose(
+    catalog: PricingCatalog,
+    components: Iterable[tuple[str, str, Decimal]],
+    assumptions: Iterable[str] = (),
+) -> CostEstimate:
+    items: list[CostItem] = []
+    missing: list[str] = []
+    total = Decimal("0.00")
+
+    for label, key, quantity in components:
+        rate = catalog.lookup(key)
+        if rate is None:
+            missing.append(f"missing price: {key}")
+            continue
+        amount = to_money(rate * quantity)
+        items.append(CostItem(label, amount, catalog.currency))
+        total += amount
+
+    if not items:
+        status = "unpriced"
+    elif missing:
+        status = "partial"
+    else:
+        status = "priced"
+
+    return CostEstimate(
+        status=status,
+        monthly_cost=total,
+        breakdown=tuple(items),
+        assumptions=tuple(assumptions),
+        missing=tuple(missing),
+    )
+
+
+def _q(value: object) -> Decimal:
+    """Quantity as Decimal. Goes through str so float usage values do not drift."""
+    return Decimal(str(value))
 
 
 def calculate_structural(
@@ -123,30 +164,115 @@ def calculate_ec2(
     usage: Mapping[str, object],
     catalog: PricingCatalog,
 ) -> CostEstimate:
-    key = "/".join(
-        (
-            "ec2",
-            str(configuration["operating_system"]),
-            str(configuration["tenancy"]),
-            str(configuration["purchase_option"]),
-            str(configuration["instance_type"]),
-        )
+    key = (
+        f"ec2/{configuration['operating_system']}/{configuration['tenancy']}"
+        f"/{configuration['purchase_option']}/{configuration['instance_type']}"
     )
-    rate = catalog.lookup(key)
-    if rate is None:
-        return unpriced(key)
-
-    hours = Decimal(str(usage["hours_per_month"]))
-    count = Decimal(str(usage["instance_count"]))
-    compute = to_money(rate * hours * count)
-    return CostEstimate(
-        status="priced",
-        monthly_cost=compute,
-        breakdown=(CostItem("instance hours", compute, "USD"),),
-        assumptions=(
+    hours = _q(usage["hours_per_month"])
+    count = _q(usage["instance_count"])
+    return _compose(
+        catalog,
+        [("instance hours", key, hours * count)],
+        [
             f"{int(count)} x {configuration['instance_type']} at {float(hours):g} h/month",
             f"on-demand {configuration['operating_system']}, {configuration['tenancy']} tenancy",
-        ),
+        ],
+    )
+
+
+def calculate_ebs(
+    configuration: Mapping[str, object],
+    usage: Mapping[str, object],
+    catalog: PricingCatalog,
+) -> CostEstimate:
+    volume_type = configuration["volume_type"]
+    size = _q(configuration["size_gib"])
+    count = _q(usage["volume_count"])
+    fraction = _q(usage["month_fraction"])
+    return _compose(
+        catalog,
+        [("provisioned storage", f"ebs/{volume_type}/gb-month", size * count * fraction)],
+        [
+            f"{int(count)} x {int(size)} GiB {volume_type}"
+            f"{'' if fraction == 1 else f' for {float(fraction):g} of the month'}",
+            "baseline gp3 performance only: provisioned IOPS and throughput are not priced",
+        ],
+    )
+
+
+def calculate_rds(
+    configuration: Mapping[str, object],
+    usage: Mapping[str, object],
+    catalog: PricingCatalog,
+) -> CostEstimate:
+    engine = configuration["engine"]
+    instance_class = configuration["instance_class"]
+    storage_type = configuration["storage_type"]
+    hours = _q(usage["hours_per_month"])
+    count = _q(usage["instance_count"])
+    storage = _q(configuration["storage_gib"])
+    storage_fraction = _q(usage["storage_month_fraction"])
+    return _compose(
+        catalog,
+        [
+            (
+                "instance hours",
+                f"rds/{engine}/single-az/on-demand/{instance_class}",
+                hours * count,
+            ),
+            (
+                "storage",
+                f"rds/storage/{storage_type}/gb-month",
+                storage * count * storage_fraction,
+            ),
+        ],
+        [
+            f"{int(count)} x {instance_class} {engine}, Single-AZ, at {float(hours):g} h/month",
+            f"{int(storage)} GiB {storage_type} storage per instance",
+        ],
+    )
+
+
+def calculate_alb(
+    configuration: Mapping[str, object],
+    usage: Mapping[str, object],
+    catalog: PricingCatalog,
+) -> CostEstimate:
+    hours = _q(usage["hours_per_month"])
+    count = _q(usage["load_balancer_count"])
+    lcu_hours = _q(usage["lcu_hours_per_month"])
+    return _compose(
+        catalog,
+        [
+            ("load balancer hours", "alb/load-balancer-hour", hours * count),
+            ("LCU hours", "alb/lcu-hour", lcu_hours),
+        ],
+        [
+            f"{int(count)} x {configuration['scheme']} ALB at {float(hours):g} h/month",
+            f"{float(lcu_hours):g} LCU-hours/month entered by hand, not measured",
+        ],
+    )
+
+
+def calculate_nat_gateway(
+    configuration: Mapping[str, object],
+    usage: Mapping[str, object],
+    catalog: PricingCatalog,
+) -> CostEstimate:
+    hours = _q(usage["hours_per_month"])
+    count = _q(usage["gateway_count"])
+    processed = _q(usage["processed_gb_per_month"])
+    return _compose(
+        catalog,
+        [
+            ("gateway hours", "nat-gateway/gateway-hour", hours * count),
+            ("data processing", "nat-gateway/processed-gb", processed),
+        ],
+        [
+            f"{int(count)} x {configuration['connectivity_type']} NAT gateway "
+            f"at {float(hours):g} h/month",
+            f"{float(processed):g} GB processed/month entered by hand, not measured",
+        ],
     )
 
 
@@ -156,4 +282,8 @@ CALCULATORS: dict[str, Calculator] = {
     "vpc": calculate_structural,
     "subnet": calculate_structural,
     "ec2": calculate_ec2,
+    "ebs": calculate_ebs,
+    "rds": calculate_rds,
+    "alb": calculate_alb,
+    "nat-gateway": calculate_nat_gateway,
 }

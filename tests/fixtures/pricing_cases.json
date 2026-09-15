@@ -1,0 +1,108 @@
+{
+  "comment": "Shared parity fixture. awsgraph/pricing.py is the reference; webui/src/pricing.ts must agree case for case.",
+  "catalog": {
+    "catalog_id": "parity",
+    "region": "ap-northeast-2",
+    "currency": "USD",
+    "rates": {
+      "ec2/linux/shared/on-demand/t3.medium": "0.0520",
+      "ebs/gp3/gb-month": "0.0912",
+      "rds/postgres/single-az/on-demand/db.t3.medium": "0.1080",
+      "rds/storage/gp3/gb-month": "0.1310",
+      "alb/load-balancer-hour": "0.0225",
+      "alb/lcu-hour": "0.0080",
+      "nat-gateway/gateway-hour": "0.0590",
+      "nat-gateway/processed-gb": "0.0590"
+    }
+  },
+  "cases": [
+    {
+      "name": "ec2-basic",
+      "resource": {
+        "id": "a", "name": "Backend", "resource_type": "ec2",
+        "configuration": { "instance_type": "t3.medium" },
+        "usage": { "instance_count": 2, "hours_per_month": 730 }
+      },
+      "expected_monthly_cost": "75.92",
+      "expected_status": "priced"
+    },
+    {
+      "name": "ec2-zero-hours",
+      "resource": {
+        "id": "a", "name": "Idle", "resource_type": "ec2",
+        "configuration": { "instance_type": "t3.medium" },
+        "usage": { "instance_count": 1, "hours_per_month": 0 }
+      },
+      "expected_monthly_cost": "0.00",
+      "expected_status": "priced"
+    },
+    {
+      "name": "ec2-unknown-instance-type",
+      "resource": {
+        "id": "a", "name": "Exotic", "resource_type": "ec2",
+        "configuration": { "instance_type": "t4g.nano" },
+        "usage": { "instance_count": 1, "hours_per_month": 730 }
+      },
+      "expected_monthly_cost": "0.00",
+      "expected_status": "unpriced"
+    },
+    {
+      "name": "ebs-two-volumes",
+      "resource": {
+        "id": "v", "name": "Data", "resource_type": "ebs",
+        "configuration": { "size_gib": 200 },
+        "usage": { "volume_count": 2 }
+      },
+      "expected_monthly_cost": "36.48",
+      "expected_status": "priced"
+    },
+    {
+      "name": "ebs-half-month",
+      "resource": {
+        "id": "v", "name": "Scratch", "resource_type": "ebs",
+        "configuration": { "size_gib": 100 },
+        "usage": { "volume_count": 1, "month_fraction": 0.5 }
+      },
+      "expected_monthly_cost": "4.56",
+      "expected_status": "priced"
+    },
+    {
+      "name": "rds-compute-plus-storage",
+      "resource": {
+        "id": "d", "name": "Main", "resource_type": "rds",
+        "configuration": { "engine": "postgres", "instance_class": "db.t3.medium", "storage_gib": 100 },
+        "usage": { "instance_count": 1, "hours_per_month": 730 }
+      },
+      "expected_monthly_cost": "91.94",
+      "expected_status": "priced"
+    },
+    {
+      "name": "rds-missing-compute-rate-is-partial",
+      "resource": {
+        "id": "d", "name": "Legacy", "resource_type": "rds",
+        "configuration": { "engine": "mysql", "instance_class": "db.t3.medium", "storage_gib": 100 },
+        "usage": { "instance_count": 1, "hours_per_month": 730 }
+      },
+      "expected_monthly_cost": "13.10",
+      "expected_status": "partial"
+    },
+    {
+      "name": "alb-half-cent-rounds-up",
+      "resource": {
+        "id": "lb", "name": "Edge", "resource_type": "alb",
+        "usage": { "load_balancer_count": 1, "hours_per_month": 730, "lcu_hours_per_month": 750 }
+      },
+      "expected_monthly_cost": "22.43",
+      "expected_status": "priced"
+    },
+    {
+      "name": "nat-hours-plus-processing",
+      "resource": {
+        "id": "n", "name": "Egress", "resource_type": "nat-gateway",
+        "usage": { "gateway_count": 1, "hours_per_month": 730, "processed_gb_per_month": 300 }
+      },
+      "expected_monthly_cost": "60.77",
+      "expected_status": "priced"
+    }
+  ]
+}

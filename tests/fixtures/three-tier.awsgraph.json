@@ -1,0 +1,30 @@
+{
+  "schema_version": "0.1",
+  "metadata": { "name": "Three Tier" },
+  "pricing_context": { "region": "ap-northeast-2", "currency": "USD", "catalog_id": "ap-northeast-2-2026-09" },
+  "resources": [
+    { "id": "vpc", "name": "Main VPC", "resource_type": "vpc", "configuration": { "cidr_block": "10.0.0.0/16" } },
+    { "id": "pub", "name": "Public Subnet", "resource_type": "subnet", "configuration": { "cidr_block": "10.0.1.0/24", "availability_zone": "ap-northeast-2a" } },
+    { "id": "app", "name": "App Subnet", "resource_type": "subnet", "configuration": { "cidr_block": "10.0.2.0/24", "availability_zone": "ap-northeast-2a" } },
+    { "id": "db", "name": "DB Subnet", "resource_type": "subnet", "configuration": { "cidr_block": "10.0.3.0/24", "availability_zone": "ap-northeast-2c" } },
+    { "id": "alb", "name": "Public ALB", "resource_type": "alb", "usage": { "load_balancer_count": 1, "hours_per_month": 730, "lcu_hours_per_month": 750 } },
+    { "id": "ec2", "name": "Backend EC2", "resource_type": "ec2", "configuration": { "instance_type": "t3.medium" }, "usage": { "instance_count": 2, "hours_per_month": 730 } },
+    { "id": "vol", "name": "Data Volume", "resource_type": "ebs", "configuration": { "size_gib": 200 }, "usage": { "volume_count": 2 } },
+    { "id": "rds", "name": "Main RDS", "resource_type": "rds", "configuration": { "engine": "postgres", "instance_class": "db.t3.medium", "storage_gib": 100 }, "usage": { "instance_count": 1, "hours_per_month": 730 } },
+    { "id": "nat", "name": "Public NAT", "resource_type": "nat-gateway", "usage": { "gateway_count": 1, "hours_per_month": 730, "processed_gb_per_month": 300 } }
+  ],
+  "relationships": [
+    { "id": "r1", "source": "vpc", "target": "pub", "relation": "contains" },
+    { "id": "r2", "source": "vpc", "target": "app", "relation": "contains" },
+    { "id": "r3", "source": "vpc", "target": "db", "relation": "contains" },
+    { "id": "r4", "source": "pub", "target": "alb", "relation": "contains" },
+    { "id": "r5", "source": "pub", "target": "nat", "relation": "contains" },
+    { "id": "r6", "source": "app", "target": "ec2", "relation": "contains" },
+    { "id": "r7", "source": "db", "target": "rds", "relation": "contains" },
+    { "id": "r8", "source": "app", "target": "nat", "relation": "routes-to" },
+    { "id": "r9", "source": "alb", "target": "ec2", "relation": "connects-to" },
+    { "id": "r10", "source": "ec2", "target": "rds", "relation": "connects-to" },
+    { "id": "r11", "source": "ec2", "target": "vol", "relation": "attached-to" }
+  ],
+  "layout": { "positions": {} }
+}

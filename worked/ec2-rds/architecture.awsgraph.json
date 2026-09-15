@@ -1,0 +1,20 @@
+{
+  "schema_version": "0.1",
+  "metadata": { "name": "EC2 and RDS" },
+  "pricing_context": { "region": "ap-northeast-2", "currency": "USD", "catalog_id": "ap-northeast-2-2026-09" },
+  "resources": [
+    { "id": "res_vpc", "name": "Main VPC", "resource_type": "vpc", "configuration": { "cidr_block": "10.0.0.0/16" } },
+    { "id": "res_app_subnet", "name": "App Subnet", "resource_type": "subnet", "configuration": { "cidr_block": "10.0.1.0/24", "availability_zone": "ap-northeast-2a" } },
+    { "id": "res_db_subnet", "name": "DB Subnet", "resource_type": "subnet", "configuration": { "cidr_block": "10.0.2.0/24", "availability_zone": "ap-northeast-2c" } },
+    { "id": "res_ec2", "name": "App Server", "resource_type": "ec2", "configuration": { "instance_type": "t3.small" }, "usage": { "instance_count": 1, "hours_per_month": 730 } },
+    { "id": "res_rds", "name": "App Database", "resource_type": "rds", "configuration": { "engine": "mysql", "instance_class": "db.t3.micro", "storage_gib": 20 }, "usage": { "instance_count": 1, "hours_per_month": 730 } }
+  ],
+  "relationships": [
+    { "id": "edge_vpc_app", "source": "res_vpc", "target": "res_app_subnet", "relation": "contains" },
+    { "id": "edge_vpc_db", "source": "res_vpc", "target": "res_db_subnet", "relation": "contains" },
+    { "id": "edge_app_ec2", "source": "res_app_subnet", "target": "res_ec2", "relation": "contains" },
+    { "id": "edge_db_rds", "source": "res_db_subnet", "target": "res_rds", "relation": "contains" },
+    { "id": "edge_ec2_rds", "source": "res_ec2", "target": "res_rds", "relation": "connects-to" }
+  ],
+  "layout": { "positions": {} }
+}

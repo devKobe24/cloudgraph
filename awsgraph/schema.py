@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Union
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 AwsRegion = Literal["ap-northeast-2"]
 DEFAULT_CATALOG_ID = "ap-northeast-2-2026-09"
 
-RESOURCE_TYPES = frozenset(
-    {"vpc", "subnet", "ec2", "ebs", "rds", "alb", "nat-gateway"}
-)
+RESOURCE_TYPES = frozenset({"vpc", "subnet", "ec2", "ebs", "rds", "alb", "nat-gateway"})
 
 Count = Annotated[int, Field(ge=1)]
 Hours = Annotated[float, Field(ge=0, le=744)]
@@ -154,15 +152,13 @@ class NatGatewayResource(ResourceBase):
 
 
 AwsResource = Annotated[
-    Union[
-        VpcResource,
-        SubnetResource,
-        Ec2Resource,
-        EbsResource,
-        RdsResource,
-        AlbResource,
-        NatGatewayResource,
-    ],
+    VpcResource
+    | SubnetResource
+    | Ec2Resource
+    | EbsResource
+    | RdsResource
+    | AlbResource
+    | NatGatewayResource,
     Field(discriminator="resource_type"),
 ]
 
